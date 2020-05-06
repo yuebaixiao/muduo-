@@ -41,7 +41,7 @@ cpu只能重新从内存中取出offset偏移处的指令。因此，跳转指�
 2，创建EventLoop对象的线程和调用此对象的loop方法的线程必须是同一个线程
 - 实现原理：
 
-loop方法里，首先调用assertInLoopThread方法，来确认是否处于同一个线程。
+  loop方法里，首先调用assertInLoopThread方法，来确认是否处于同一个线程。
 
 EventLoop类的threadId_成员变量，在构造方法里被初始化为当前的线程的线程ID。然后在assertInLoopThread方法里，判断调用者的线程ID和threadId_是否相等，如果相等则说明是在同一个线程。
 
