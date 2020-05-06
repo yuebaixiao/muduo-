@@ -34,9 +34,3 @@ EventLoop类的threadId_成员变量，在构造方法里被初始化为当前�
 CurrentThread::tid()方法里使用了if (__builtin_expect(t_cachedTid == 0, 0))，__builtin_expect的作用是：https://blog.csdn.net/shuimuniao/article/details/8017971
 
 
-- asdf
-    - asdfaaa 
-    - ds
-	asdf
-    	- ddd
-		sadf
