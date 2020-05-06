@@ -28,7 +28,7 @@ class Channel : boost::noncopyable
   typedef boost::function<void()> EventCallback;
 
   Channel(EventLoop* loop, int fd);
-
+  // 设置events_的值，并调用私有函数update。目的是往poller里添加fd_的监听事件（读或者写）
   void handleEvent();
   void setReadCallback(const EventCallback& cb)
   { readCallback_ = cb; }
@@ -56,19 +56,19 @@ class Channel : boost::noncopyable
  private:
   void update();
 
-  static const int kNoneEvent;
-  static const int kReadEvent;
-  static const int kWriteEvent;
+  static const int kNoneEvent;	// 0
+  static const int kReadEvent;	// POLLIN | POLLPRI（读）
+  static const int kWriteEvent;	// POLLOUT（写）
 
-  EventLoop* loop_;
-  const int  fd_;
-  int        events_;
-  int        revents_;
-  int        index_; // used by Poller.
+  EventLoop* loop_;		// Channel对象所属的EventLoop对象
+  const int  fd_;		// Channel负责的fd
+  int        events_;		// Channel关注的事件
+  int        revents_;		// poll或epoll_wait返回后，fd的事件
+  int        index_;		// Poller里有一个std::vector<struct pollfd> pollfds_，此index_标识出，此Channel在pollfds_里的index。
 
-  EventCallback readCallback_;
-  EventCallback writeCallback_;
-  EventCallback errorCallback_;
+  EventCallback readCallback_;	// 可读事件触发后，调用此方法
+  EventCallback writeCallback_;	// 可写事件触发后，调用此方法
+  EventCallback errorCallback_;	// error事件触发后，调用此方法
 };
 
 }
