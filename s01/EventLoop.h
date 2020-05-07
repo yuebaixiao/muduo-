@@ -16,8 +16,8 @@
 namespace muduo
 {
 
-class Channel;
-class Poller;
+class Channel;			// 前向声明
+class Poller;			// 前向声明
 
 class EventLoop : boost::noncopyable
 {
@@ -35,10 +35,10 @@ class EventLoop : boost::noncopyable
   ///
   void loop();
 
-  void quit();
+  void quit();			// 退出loop方法
 
   // internal use only
-  void updateChannel(Channel* channel);
+  void updateChannel(Channel* channel); // 把channel里的值，更新到Poller的pollfds_里
   // void removeChannel(Channel* channel);
 
   void assertInLoopThread()
@@ -60,8 +60,8 @@ class EventLoop : boost::noncopyable
   bool looping_; /* atomic */
   bool quit_; /* atomic */
   const pid_t threadId_;
-  boost::scoped_ptr<Poller> poller_;
-  ChannelList activeChannels_;
+  boost::scoped_ptr<Poller> poller_; // Poller对象的智能指针
+  ChannelList activeChannels_;	     // 存放的是已经发生事件的fd所对应的Channel对象的指针。
 };
 
 }

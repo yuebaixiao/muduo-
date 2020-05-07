@@ -17,7 +17,7 @@
 using namespace muduo;
 
 __thread EventLoop* t_loopInThisThread = 0;
-const int kPollTimeMs = 10000;
+const int kPollTimeMs = 10000;	// 设置poll(2)的超时时长
 
 EventLoop::EventLoop()
   : looping_(false),
@@ -52,12 +52,12 @@ void EventLoop::loop()
 
   while (!quit_)
   {
-    activeChannels_.clear();
-    poller_->poll(kPollTimeMs, &activeChannels_);
+    activeChannels_.clear();	// 调用poll方法前，先清空
+    poller_->poll(kPollTimeMs, &activeChannels_); // 调用poll，设置超时时长
     for (ChannelList::iterator it = activeChannels_.begin();
         it != activeChannels_.end(); ++it)
     {
-      (*it)->handleEvent();
+      (*it)->handleEvent();	// 执行channel里的回调方法
     }
   }
 
@@ -67,15 +67,15 @@ void EventLoop::loop()
 
 void EventLoop::quit()
 {
-  quit_ = true;
+  quit_ = true;			// true后，loop的while可以退出
   // wakeup();
 }
 
 void EventLoop::updateChannel(Channel* channel)
 {
-  assert(channel->ownerLoop() == this);
-  assertInLoopThread();
-  poller_->updateChannel(channel);
+  assert(channel->ownerLoop() == this); // 判断channel里的loop必须是这个loop
+  assertInLoopThread();			// 判断执行此方法的线程必须和创建此loop的线程是同一个线程
+  poller_->updateChannel(channel);	// 调用Poller的poll方法
 }
 
 void EventLoop::abortNotInLoopThread()

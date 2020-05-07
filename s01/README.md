@@ -43,3 +43,12 @@
 - private方法：
   -	fillActiveChannels 
 #### 3，EventLoop ####
+- 跟s00的EventLoop比，最主要的是增加了quit方法和poller，activeChannels_成员变量，基本实现了在一个循环里，调用poll(2).
+
+- 成员变量
+    - quit_:值为true就退出循环，但必须等待poll返回后才能退出。如果在poll阻塞的时候，即使把值设置为true，也不能立即退出循环。
+	- poller_:Poller对象
+	- activeChannels_:类型是std::vector<Channel*>，存放的是已经发生事件的fd所对应的Channel对象的指针。
+- public方法
+    - updateChannel:更新Poller里的pollfds_。
+	- loop:在while循环里调用Poller的poll方法，poll方法返回后，处理activeChannels_，然后回调注册在channel的回调方法。
