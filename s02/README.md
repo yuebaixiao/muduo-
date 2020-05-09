@@ -45,9 +45,9 @@
 	TimerList timers_:定时器队列
 - public方法：
 	- TimerQueue(EventLoop* loop)：构造方法
-	- addTimer:往队列里添加定时器。定时器包含到时时间，到时的回调函数。如果参数interval大于0，则每过interval秒回调一次回调函数；如果等于0，回调函数只执行一次。
+	- addTimer:往队列里添加定时器。定时器包含到时时间，到时的回调函数。如果参数interval大于0，则每过interval秒回调一次回调函数；如果等于0，回调函数只执行一次。注意调用此方法的线程必须是创建loop_的线程
 - private方法：
-    - handleRead:定时器到时间后，会执行此方法。实现方式是在构造方法里，timerfdChannel_.setReadCallback(&TimerQueue::handleRead, this)).
+    - handleRead:定时器到时间后，会执行此方法。实现方式是在构造方法里，timerfdChannel_.setReadCallback(&TimerQueue::handleRead, this)).注意调用此方法的线程必须是创建loop_的线程
 	- getExpired:根据现在时间点的时间，计算出已经到期的定时器，从定时器队列里删除它们，并返回给调用方。
 	实现方式是先用当前时间创建一个哨兵(iterator)，然后使用timers_.lower_bound(sentry)得到第一个大于哨兵时间的iterator(it),然后使用std::copy填充expired，注意这里使用了back_inserter。因为std::copy不能自动增大expired的空间，所以必须使用back_inserter。
 	- insert:把参数Timer指针插入到定时器队列，如果它是队列里的第一个元素（最先到时的定时器）的话，则返回true。addTimer方法调用insert，如果发现返回值是true，则用此Timer，调整timerfd_。
@@ -103,3 +103,5 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback& cb)
 
 ```
 
+#### test4.cc ####
+使用了EventLoop里的runAt，runAfter，runEvery方法
