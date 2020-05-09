@@ -140,7 +140,8 @@ void TimerQueue::handleRead()
 std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now)
 {
   std::vector<Entry> expired;
-  Entry sentry = std::make_pair(now, reinterpret_cast<Timer*>(UINTPTR_MAX));
+  Entry sentry = std::make_pair(now, reinterpret_cast<Timer*>(UINTPTR_MAX)); // https://zh.cppreference.com/w/cpp/language/reinterpret_cast
+  // UINTPTR_MAX是uintptr_t 类型对象的最大值
   TimerList::iterator it = timers_.lower_bound(sentry);
   assert(it == timers_.end() || now < it->first);
   std::copy(timers_.begin(), it, back_inserter(expired));
