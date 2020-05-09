@@ -20,6 +20,7 @@
 	   # define PRId64         __PRI64_PREFIX "d"
 
 ```
+
 	- toFormattedString:返回string，把微秒，换算成年月日时分秒表示出来。
 	- valid：判断成员变量microSecondsSinceEpoch_是否大于0.
 	- microSecondsSinceEpoch：返回成员变量microSecondsSinceEpoch_
