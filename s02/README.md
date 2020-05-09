@@ -8,7 +8,8 @@
 	- swap：交换2个对象的成员变量microSecondsSinceEpoch_。
 	- toString：返回string，把微秒换算成秒和微秒表示出来。
 	 - 此方法里使用了宏PRId64。在32位系统int64_t的实际类型是long long int，所以printf函数里必须使用lld；而在64位系统里int64_t的实际类型是long int，所以printf函数里必须使用ld，为了写出与平台无关的代码所以使用此宏PRId64.
-	  ``` c
+	 
+``` c
        # if __WORDSIZE == 64
        #  define __PRI64_PREFIX        "l"
        #  define __PRIPTR_PREFIX       "l"
@@ -17,8 +18,8 @@
        #  define __PRIPTR_PREFIX
        # endif
 	   # define PRId64         __PRI64_PREFIX "d"
-	   
-	  ```
+
+```
 	- toFormattedString:返回string，把微秒，换算成年月日时分秒表示出来。
 	- valid：判断成员变量microSecondsSinceEpoch_是否大于0.
 	- microSecondsSinceEpoch：返回成员变量microSecondsSinceEpoch_
