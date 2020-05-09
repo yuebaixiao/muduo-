@@ -72,3 +72,34 @@
 
 ```
 
+#### 3,EventLoop.h[cc] ####
+有了TimerQueue后，EventLoop.h里新增了3个高级的定时器，分别是runAt，runAfter，runEvery。
+
+- 新增的成员变量：
+    - std::unique_ptr<TimerQueue> timerQueue_;
+	
+- public方法：
+    - runAt:定一个具体时间的定时器
+	- runAfter:根据当前时间，几秒后响的定时器。
+	- runEvery:定义一个重复的定时器（每几秒钟响一次）
+	
+``` c
+TimerId EventLoop::runAt(const Timestamp& time, const TimerCallback& cb)
+{
+  return timerQueue_->addTimer(cb, time, 0.0);
+}
+
+TimerId EventLoop::runAfter(double delay, const TimerCallback& cb)
+{
+  Timestamp time(addTime(Timestamp::now(), delay));
+  return runAt(time, cb);
+}
+
+TimerId EventLoop::runEvery(double interval, const TimerCallback& cb)
+{
+  Timestamp time(addTime(Timestamp::now(), interval));
+  return timerQueue_->addTimer(cb, time, interval);
+}
+
+```
+
