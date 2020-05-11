@@ -39,15 +39,15 @@ class Thread : noncopyable
  private:
   void setDefaultName();
 
-  bool       started_;
-  bool       joined_;
-  pthread_t  pthreadId_;
-  pid_t      tid_;
-  ThreadFunc func_;
-  string     name_;
-  CountDownLatch latch_;
+  bool       started_;		// 线程是否启动了
+  bool       joined_;		// 线程释放joined了
+  pthread_t  pthreadId_;	// pthread_create等系统调用使用它
+  pid_t      tid_;		// 创建的线程的进程id
+  ThreadFunc func_;		// 要启动的线程要运行的函数
+  string     name_;		// 线程的名字
+  CountDownLatch latch_;	// 倒计时锁，计数器是1。目的是等待runInThread函数里，把tid的值设置完毕。如果没有 latch_，会有 race condition，即调用 Thread::tid() 的时候线程还没有启动，结果返回初值 0。
 
-  static AtomicInt32 numCreated_;
+  static AtomicInt32 numCreated_; // 由于是静态的，所以是个全局变量，里面保存的是一共创建了多少个线程。
 };
 
 }  // namespace muduo

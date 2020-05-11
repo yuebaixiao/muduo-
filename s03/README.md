@@ -53,11 +53,18 @@ IO线程不一定是主线程，用EventLoopThread类去创建运行EventLoop::l
     - bool       started_:线程是否启动了
     - bool       joined_:线程释放joined了
     - pthread_t  pthreadId_：pthread_create等系统调用使用
-    - pid_t      tid_：进程id
+    - pid_t      tid_：创建的线程的进程id
     - ThreadFunc func_：要启动的线程要运行的函数
     - string     name_：线程的名字
     - CountDownLatch latch_：倒计时锁
 
-    - static AtomicInt32 numCreated_：AtomicInt32的加减是原子的，所以不用加锁，是静态的。
+    - static AtomicInt32 numCreated_：AtomicInt32的加减是原子的，所以不用加锁，是静态的，里面保存的是一共创建了多少个线程
+	
 - private方法：
-  - void setDefaultName()：
+  - void setDefaultName()：让numCreated_的值加1，如果name_是空，则给name_赋值(Thread%d)。
+  
+- public方法：
+    - explicit Thread(ThreadFunc, const string& name = string())：倒计时锁的计数器设置为1，调用setDefaultName方法。
+	- ~Thread()：如果已经启动了，而且还没有被join，则调用pthread_detach方法
+	- void start():调用pthread_create方法，启动线程。
+	- static int numCreated():静态方法，返回numCreated_里的值。目的是返回已经创建了多少个线程。

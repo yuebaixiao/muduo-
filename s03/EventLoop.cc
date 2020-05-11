@@ -55,15 +55,15 @@ EventLoop::EventLoop()
     t_loopInThisThread = this;
   }
   wakeupChannel_->setReadCallback(
-      boost::bind(&EventLoop::handleRead, this));
+      boost::bind(&EventLoop::handleRead, this)); // 设置wakeupChannel_的读的回调方法是&EventLoop::handleRead
   // we are always reading the wakeupfd
-  wakeupChannel_->enableReading();
+  wakeupChannel_->enableReading(); // 把wakeupFd_加入到poller里
 }
 
 EventLoop::~EventLoop()
 {
   assert(!looping_);
-  ::close(wakeupFd_);
+  ::close(wakeupFd_);		// 关闭wakeupFd_文件描述符
   t_loopInThisThread = NULL;
 }
 
@@ -83,7 +83,7 @@ void EventLoop::loop()
     {
       (*it)->handleEvent();
     }
-    doPendingFunctors();
+    doPendingFunctors();	// 执行回调函数
   }
 
   LOG_TRACE << "EventLoop " << this << " stop looping";
@@ -93,7 +93,7 @@ void EventLoop::loop()
 void EventLoop::quit()
 {
   quit_ = true;
-  if (!isInLoopThread())
+  if (!isInLoopThread())	// 如果是在非IO线程调用quit，则需要唤醒poll方法
   {
     wakeup();
   }
@@ -101,11 +101,11 @@ void EventLoop::quit()
 
 void EventLoop::runInLoop(const Functor& cb)
 {
-  if (isInLoopThread())
+  if (isInLoopThread())		// 如果是在IO线程调用runInLoop，则立即执行回调函数cb
   {
     cb();
   }
-  else
+  else				// 如果不是在IO线程调用runInLoop，则把回调加入到队列pendingFunctors_.push_back里。
   {
     queueInLoop(cb);
   }
@@ -114,11 +114,11 @@ void EventLoop::runInLoop(const Functor& cb)
 void EventLoop::queueInLoop(const Functor& cb)
 {
   {
-  MutexLockGuard lock(mutex_);
-  pendingFunctors_.push_back(cb);
+  MutexLockGuard lock(mutex_);	// 保护pendingFunctors_.push_back
+  pendingFunctors_.push_back(cb); // 把回调加入队列
   }
 
-  if (!isInLoopThread() || callingPendingFunctors_)
+  if (!isInLoopThread() || callingPendingFunctors_) // 如果是在IO线程里的方法doPendingFunctors里的回调函数里，又调用了queueInLoop，则需要唤醒poll方法。
   {
     wakeup();
   }
@@ -158,7 +158,7 @@ void EventLoop::abortNotInLoopThread()
 void EventLoop::wakeup()
 {
   uint64_t one = 1;
-  ssize_t n = ::write(wakeupFd_, &one, sizeof one);
+  ssize_t n = ::write(wakeupFd_, &one, sizeof one); // 为了唤醒poll方法，所以写点东西进去
   if (n != sizeof one)
   {
     LOG_ERROR << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
@@ -168,7 +168,7 @@ void EventLoop::wakeup()
 void EventLoop::handleRead()
 {
   uint64_t one = 1;
-  ssize_t n = ::read(wakeupFd_, &one, sizeof one);
+  ssize_t n = ::read(wakeupFd_, &one, sizeof one); // poll方法被唤醒，从阻塞中苏醒，调用此函数
   if (n != sizeof one)
   {
     LOG_ERROR << "EventLoop::handleRead() reads " << n << " bytes instead of 8";
@@ -181,13 +181,13 @@ void EventLoop::doPendingFunctors()
   callingPendingFunctors_ = true;
 
   {
-  MutexLockGuard lock(mutex_);
+  MutexLockGuard lock(mutex_);	// 保护pendingFunctors_，目的是一方面缩小了临界区，另一方面是避免死锁（因为Functor可能再调用queueInLoop()）
   functors.swap(pendingFunctors_);
   }
 
   for (size_t i = 0; i < functors.size(); ++i)
   {
-    functors[i]();
+    functors[i]();		// 执行回调
   }
   callingPendingFunctors_ = false;
 }

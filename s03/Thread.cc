@@ -25,10 +25,10 @@ namespace detail
 
 pid_t gettid()
 {
-  return static_cast<pid_t>(::syscall(SYS_gettid));
+  return static_cast<pid_t>(::syscall(SYS_gettid)); // 返回当前线程的进程id
 }
-
-void afterFork()
+  
+void afterFork()		// 调用fork函数后，在子进程里调用此函数，目的是让此子进程为主线程。
 {
   muduo::CurrentThread::t_cachedTid = 0;
   muduo::CurrentThread::t_threadName = "main";
@@ -39,7 +39,7 @@ void afterFork()
 class ThreadNameInitializer
 {
  public:
-  ThreadNameInitializer()
+  ThreadNameInitializer()	// 目的是让当前进程为主线程。调用pthread_atfork系统调用，当在此进程调用fork后，在子进程里调用注册的afterFork函数。
   {
     muduo::CurrentThread::t_threadName = "main";
     CurrentThread::tid();
@@ -47,15 +47,15 @@ class ThreadNameInitializer
   }
 };
 
-ThreadNameInitializer init;
+ThreadNameInitializer init;	// 执行ThreadNameInitializer类的构造方法。
 
-struct ThreadData
+struct ThreadData		// 辅助类
 {
   typedef muduo::Thread::ThreadFunc ThreadFunc;
-  ThreadFunc func_;
-  string name_;
-  pid_t* tid_;
-  CountDownLatch* latch_;
+  ThreadFunc func_;		// 子线程运行的函数
+  string name_;			// 子线程的名字
+  pid_t* tid_;			// 子线程的进程id
+  CountDownLatch* latch_;	// 倒计时锁，计数器的值为1
 
   ThreadData(ThreadFunc func,
              const string& name,
@@ -67,18 +67,18 @@ struct ThreadData
       latch_(latch)
   { }
 
-  void runInThread()
+  void runInThread()		// 子线程运行的函数
   {
-    *tid_ = muduo::CurrentThread::tid();
-    tid_ = NULL;
-    latch_->countDown();
-    latch_ = NULL;
+    *tid_ = muduo::CurrentThread::tid(); // 取得当前线程(子线程）的进程id，为了返回给主线程，所以使用的是指针。
+    tid_ = NULL;			 // 返回给主线程后，这个指针就没有用了，所以设置为NULL
+    latch_->countDown();		 // 让倒计时锁的计数器减1，变为0，所以wait的地方就从阻塞中返回了。
+    latch_ = NULL;			 // 然后就不使用它了，所以设置为NULL
 
     muduo::CurrentThread::t_threadName = name_.empty() ? "muduoThread" : name_.c_str();
-    ::prctl(PR_SET_NAME, muduo::CurrentThread::t_threadName);
+    ::prctl(PR_SET_NAME, muduo::CurrentThread::t_threadName); // 通过系统调用prctl，修改进程的名字
     try
     {
-      func_();
+      func_();			// 执行回调函数
       muduo::CurrentThread::t_threadName = "finished";
     }
     catch (const Exception& ex)
@@ -184,7 +184,7 @@ void Thread::start()
   }
   else
   {
-    latch_.wait();
+    latch_.wait();		// latch_是CountDownLatch（倒计时锁）的对象，在等待runInThread函数里，把tid的值设置完毕。
     assert(tid_ > 0);
   }
 }

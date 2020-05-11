@@ -96,25 +96,25 @@ class EventLoop : boost::noncopyable
  private:
 
   void abortNotInLoopThread();
-  void handleRead();  // waked up
-  void doPendingFunctors();
+  void handleRead();  // waked up wakeupChannel_的读事件的回调方法，从wakeupFd_读数据。
+  void doPendingFunctors();	// 执行队列pendingFunctors_里的回调方法
 
   typedef std::vector<Channel*> ChannelList;
 
   bool looping_; /* atomic */
   bool quit_; /* atomic */
-  bool callingPendingFunctors_; /* atomic */
+  bool callingPendingFunctors_; /* atomic */ //true的时候需要调用唤醒方法wakeup，让poll方法从阻塞中返回
   const pid_t threadId_;
   Timestamp pollReturnTime_;
   boost::scoped_ptr<Poller> poller_;
   boost::scoped_ptr<TimerQueue> timerQueue_;
-  int wakeupFd_;
+  int wakeupFd_;  // eventfd系统调用创建的事件的文件描述符，把它加入到poller里，当要唤醒poll方法时，就往此fd里写数据即可。
   // unlike in TimerQueue, which is an internal class,
   // we don't expose Channel to client.
-  boost::scoped_ptr<Channel> wakeupChannel_;
+  boost::scoped_ptr<Channel> wakeupChannel_; // 包装wakeupFd_的Channle
   ChannelList activeChannels_;
-  MutexLock mutex_;
-  std::vector<Functor> pendingFunctors_; // @GuardedBy mutex_
+  MutexLock mutex_;			 // 保护pendingFunctors_用的
+  std::vector<Functor> pendingFunctors_; // @GuardedBy mutex_ 回调函数队列
 };
 
 }
